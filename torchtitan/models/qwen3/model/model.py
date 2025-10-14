@@ -492,8 +492,21 @@ class Qwen3Model(nn.Module, ModelProtocol):
         # passthrough for nonexistent layers, allows easy configuration of pipeline parallel stages
         h = self.tok_embeddings(tokens) if self.tok_embeddings else tokens
 
+        # Check if we need to extend the rope_cache for longer sequences
+        seq_len = h.shape[1]
+        if seq_len > self.rope_cache.shape[0]:
+            # Dynamically extend the rope_cache to handle longer sequences
+            extended_rope_cache = precompute_rope_cache(
+                self.model_args.head_dim,
+                seq_len,
+                self.model_args.rope_theta,
+            )
+            rope_cache = extended_rope_cache.to(device=self.rope_cache.device, dtype=self.rope_cache.dtype)
+        else:
+            rope_cache = self.rope_cache
+
         for layer in self.layers.values():
-            h = layer(h, self.rope_cache, attention_masks)
+            h = layer(h, rope_cache, attention_masks)
 
         h = self.norm(h) if self.norm else h
         output = self.output(h) if self.output else h
