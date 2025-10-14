@@ -8,18 +8,22 @@
 
 import functools
 from collections.abc import Callable
-from typing import ClassVar
+from typing import Any, ClassVar
 
 import torch
 import torch.nn.functional as F
 from torch.nn.attention import sdpa_kernel, SDPBackend
 from torch.nn.attention.flex_attention import (
     _mask_mod_signature,
-    AuxOutput,
     BlockMask,
     create_block_mask,
     flex_attention,
 )
+
+try:
+    from torch.nn.attention.flex_attention import AuxOutput
+except ImportError:
+    AuxOutput = Any  # type: ignore
 
 
 __all__ = [
@@ -57,7 +61,7 @@ class FlexAttentionWrapper(torch.nn.Module):
         *,
         block_mask: BlockMask,
         scale: float | None = None,
-    ) -> torch.Tensor | tuple[torch.Tensor, AuxOutput]:
+    ) -> torch.Tensor | tuple[torch.Tensor, Any]:
         # 1. _compiled_flex_attn has to be a class variable, otherwise there will
         #    be multiple compiled flex_attention instances, which can be slow.
         # 2. `self._compiled_flex_attn` is not correct, `self` will be passed in
