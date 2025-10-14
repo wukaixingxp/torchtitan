@@ -448,10 +448,41 @@ class CheckpointManager:
                 checkpoint_id, from_quantized
             )
 
-            dcp.load(
-                hf_state_dict,
-                storage_reader=hf_storage_reader,
-            )
+            try:
+                dcp.load(
+                    hf_state_dict,
+                    storage_reader=hf_storage_reader,
+                )
+            except dcp.CheckpointException as e:
+                # Handle missing keys in checkpoint (e.g., lm_head.weight might be tied to embeddings)
+                logger.warning(f"Checkpoint loading failed: {e}")
+                logger.warning("Retrying with missing keys excluded from loading...")
+                
+                # Parse the error to extract missing keys
+                error_str = str(e)
+                missing_keys = set()
+                for line in error_str.split('\n'):
+                    match = re.search(r"Missing key in checkpoint state_dict: (.+)\.$", line)
+                    if match:
+                        missing_keys.add(match.group(1))
+                
+                if missing_keys:
+                    logger.warning(f"Excluding missing keys from checkpoint loading: {missing_keys}")
+                    # Create a filtered state dict that excludes missing keys
+                    filtered_hf_state_dict = {k: v for k, v in hf_state_dict.items() if k not in missing_keys}
+                    
+                    # Retry loading with filtered state dict
+                    dcp.load(
+                        filtered_hf_state_dict,
+                        storage_reader=hf_storage_reader,
+                    )
+                    
+                    # Copy loaded values back to original state dict
+                    for k, v in filtered_hf_state_dict.items():
+                        hf_state_dict[k] = v
+                else:
+                    # If we couldn't parse missing keys, re-raise the exception
+                    raise
 
             state_dict = self.sd_adapter.from_hf(hf_state_dict)
             self.states[MODEL].load_state_dict(state_dict)
