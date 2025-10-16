@@ -5,7 +5,7 @@
 # LICENSE file in the root directory of this source tree.
 
 # This file applies the PT-D parallelisms (except pipeline parallelism) and various
-# training techniques (e.g. activation checkpointing and compile) to the Llama model.
+# training techniques (e.g. activation checkpointing and compile) to the Qwen2.5 model.
 
 import torch
 import torch.nn as nn

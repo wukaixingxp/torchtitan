@@ -53,7 +53,7 @@ class Qwen2_5StateDictAdapter(MoEStateDictAdapter):
     def to_hf(self, state_dict: dict[str, Any]) -> dict[str, Any]:
         """
         1. Convert between the HF shape and the torchtitan shape.
-        2. Split the GroupedExperts' weight into separate expert's wegiht.
+        2. Split the GroupedExperts' weight into separate expert's weight.
         """
         to_hf_map = {v: k for k, v in self.from_hf_map.items()}
         hf_state_dict = {}
@@ -112,7 +112,7 @@ class Qwen2_5StateDictAdapter(MoEStateDictAdapter):
     def from_hf(self, hf_state_dict: dict[str, Any]) -> dict[str, Any]:
         """
         1. Convert between the HF shape and the torchtitan shape.
-        2. Concate separate expert's wegiht into GroupedExperts' weight.
+        2. Concatenate separate expert's weight into GroupedExperts' weight.
         """
 
         state_dict = {}

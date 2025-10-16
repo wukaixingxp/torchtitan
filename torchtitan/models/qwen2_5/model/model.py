@@ -265,7 +265,7 @@ class FeedForward(nn.Module):
     ):
         super().__init__()
 
-        # Hidden dimension is directly added from the model argsS
+        # Hidden dimension is directly added from the model args
         self.w1 = nn.Linear(dim, hidden_dim, bias=False)
         self.w2 = nn.Linear(hidden_dim, dim, bias=False)
         self.w3 = nn.Linear(dim, hidden_dim, bias=False)
